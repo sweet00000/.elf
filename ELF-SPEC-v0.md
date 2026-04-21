@@ -1,6 +1,6 @@
 # ELF Format Specification, version 0.1
 
-**ELF — Embedded Language File**
+**ELF — Embedded Language Format**
 *Embedded content + local inference + declared UI contract.*
 
 **Status:** Draft

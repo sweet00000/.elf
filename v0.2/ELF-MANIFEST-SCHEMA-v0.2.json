@@ -1,0 +1,1222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://elf-format.org/schema/elf-manifest-v0.2.json",
+  "title": "ELF Manifest v0.2",
+  "description": "Structural JSON Schema for ELF v0.2 manifests. Cross-resource integrity and packaging checks remain semantic conformance checks outside JSON Schema.",
+  "type": "object",
+  "required": [
+    "elf_version",
+    "id",
+    "title",
+    "created",
+    "resources",
+    "interaction",
+    "fulfillments"
+  ],
+  "properties": {
+    "elf_version": {
+      "const": "0.2"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:.+$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "created": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "locales": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/localeTag"
+      },
+      "uniqueItems": true
+    },
+    "resources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/resourceRecord"
+      }
+    },
+    "knowledge": {
+      "$ref": "#/$defs/knowledge"
+    },
+    "interaction": {
+      "$ref": "#/$defs/interaction"
+    },
+    "fulfillments": {
+      "$ref": "#/$defs/fulfillments"
+    },
+    "bindings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/binding"
+      }
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/requirementToken"
+      },
+      "uniqueItems": true
+    },
+    "permissions": {
+      "$ref": "#/$defs/permissions"
+    },
+    "extensions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/extensionDecl"
+      }
+    },
+    "licenses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/licenseEntry"
+      }
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "signatures": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/signatureEntry"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "interaction": {
+            "properties": {
+              "operations": {
+                "contains": {
+                  "const": "generate-text"
+                }
+              }
+            },
+            "required": [
+              "operations"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "fulfillments": {
+            "required": [
+              "generate-text"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "interaction": {
+            "properties": {
+              "operations": {
+                "contains": {
+                  "const": "embed-text"
+                }
+              }
+            },
+            "required": [
+              "operations"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "fulfillments": {
+            "required": [
+              "embed-text"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "interaction": {
+            "properties": {
+              "operations": {
+                "contains": {
+                  "const": "retrieve-segments"
+                }
+              }
+            },
+            "required": [
+              "operations"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "fulfillments": {
+            "required": [
+              "retrieve-segments"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "interaction": {
+            "properties": {
+              "operations": {
+                "contains": {
+                  "const": "read-resource"
+                }
+              }
+            },
+            "required": [
+              "operations"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "fulfillments": {
+            "required": [
+              "read-resource"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": true,
+  "$defs": {
+    "resourceId": {
+      "type": "string",
+      "pattern": "^res:[A-Za-z0-9._:-]+$"
+    },
+    "sha256Hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "artifactDigest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "httpsUri": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://"
+    },
+    "localeTag": {
+      "type": "string",
+      "pattern": "^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+    },
+    "roleToken": {
+      "anyOf": [
+        {
+          "enum": [
+            "document",
+            "segment-set",
+            "embedding-set",
+            "index",
+            "model",
+            "template",
+            "binding-ui",
+            "binding-runtime",
+            "asset",
+            "license-text",
+            "provenance"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^(x-|urn:).+"
+        }
+      ]
+    },
+    "operationName": {
+      "anyOf": [
+        {
+          "enum": [
+            "generate-text",
+            "embed-text",
+            "retrieve-segments",
+            "read-resource"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^(x-|urn:).+"
+        }
+      ]
+    },
+    "fulfillmentKind": {
+      "anyOf": [
+        {
+          "enum": [
+            "embedded-model",
+            "embedded-index",
+            "host-capability",
+            "network-resource"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^(x-|urn:).+"
+        }
+      ]
+    },
+    "bindingName": {
+      "anyOf": [
+        {
+          "const": "browser-js"
+        },
+        {
+          "type": "string",
+          "pattern": "^(x-|urn:).+"
+        }
+      ]
+    },
+    "requirementToken": {
+      "anyOf": [
+        {
+          "enum": [
+            "compute.local",
+            "compute.simd",
+            "compute.shared-memory",
+            "acceleration.gpu",
+            "storage.persistent",
+            "binding.browser-dom",
+            "binding.browser-esm",
+            "binding.browser-worker",
+            "binding.browser-module-worker"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^(x-|urn:).+"
+        }
+      ]
+    },
+    "selectionPolicy": {
+      "anyOf": [
+        {
+          "enum": [
+            "prefer-embedded",
+            "prefer-host",
+            "pinned"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^(x-|urn:).+"
+        }
+      ]
+    },
+    "resourceRecord": {
+      "type": "object",
+      "required": [
+        "id",
+        "media_type",
+        "size",
+        "sha256",
+        "role",
+        "behavioral",
+        "canonical_content"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/resourceId"
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256Hex"
+        },
+        "role": {
+          "$ref": "#/$defs/roleToken"
+        },
+        "behavioral": {
+          "type": "boolean"
+        },
+        "canonical_content": {
+          "type": "boolean"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "derived_from": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/resourceId"
+          },
+          "minItems": 1
+        },
+        "fetch_urls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/httpsUri"
+          },
+          "minItems": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "derived_from"
+            ]
+          },
+          "then": {
+            "properties": {
+              "canonical_content": {
+                "const": false
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+    "knowledge": {
+      "type": "object",
+      "properties": {
+        "documents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/resourceId"
+          },
+          "minItems": 1
+        },
+        "segments": {
+          "$ref": "#/$defs/segmentsRef"
+        },
+        "embeddings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/embeddingRef"
+          }
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/indexRef"
+          }
+        }
+      },
+      "minProperties": 1,
+      "additionalProperties": true
+    },
+    "segmentsRef": {
+      "type": "object",
+      "required": [
+        "resource",
+        "format"
+      ],
+      "properties": {
+        "resource": {
+          "$ref": "#/$defs/resourceId"
+        },
+        "format": {
+          "anyOf": [
+            {
+              "const": "elf-segments-jsonl/v1"
+            },
+            {
+              "type": "string",
+              "pattern": "^(x-|urn:).+"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "embeddingRef": {
+      "type": "object",
+      "required": [
+        "resource",
+        "dimensions",
+        "dtype"
+      ],
+      "properties": {
+        "resource": {
+          "$ref": "#/$defs/resourceId"
+        },
+        "dimensions": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dtype": {
+          "anyOf": [
+            {
+              "enum": [
+                "float32",
+                "float16",
+                "int8"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^(x-|urn:).+"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "indexRef": {
+      "type": "object",
+      "required": [
+        "resource",
+        "kind"
+      ],
+      "properties": {
+        "resource": {
+          "$ref": "#/$defs/resourceId"
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "hnsw",
+                "ivf",
+                "flat"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^(x-|urn:).+"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "interaction": {
+      "type": "object",
+      "required": [
+        "kind",
+        "operations"
+      ],
+      "properties": {
+        "kind": {
+          "anyOf": [
+            {
+              "enum": [
+                "chat",
+                "search",
+                "qa",
+                "summarize",
+                "translate",
+                "agent",
+                "blank"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^(x-|urn:).+"
+            }
+          ]
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/operationName"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "generate-text": {
+          "$ref": "#/$defs/generateTextConfig"
+        },
+        "embed-text": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "retrieve-segments": {
+          "$ref": "#/$defs/retrieveSegmentsConfig"
+        },
+        "read-resource": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operations": {
+                "contains": {
+                  "const": "generate-text"
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "generate-text"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operations": {
+                "contains": {
+                  "const": "embed-text"
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "embed-text"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operations": {
+                "contains": {
+                  "const": "retrieve-segments"
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "retrieve-segments"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operations": {
+                "contains": {
+                  "const": "read-resource"
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "read-resource"
+            ]
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+    "generateTextConfig": {
+      "type": "object",
+      "required": [
+        "input",
+        "roles",
+        "template"
+      ],
+      "properties": {
+        "input": {
+          "const": "messages"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "system",
+              "user",
+              "assistant",
+              "tool"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "template": {
+          "$ref": "#/$defs/templateRef"
+        },
+        "default_stop": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/stopCondition"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "retrieveSegmentsConfig": {
+      "type": "object",
+      "required": [
+        "segments"
+      ],
+      "properties": {
+        "segments": {
+          "$ref": "#/$defs/resourceId"
+        },
+        "default_k": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "citation_mode": {
+          "anyOf": [
+            {
+              "const": "segment-id"
+            },
+            {
+              "type": "string",
+              "pattern": "^(x-|urn:).+"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "templateRef": {
+      "type": "object",
+      "required": [
+        "resource",
+        "format"
+      ],
+      "properties": {
+        "resource": {
+          "$ref": "#/$defs/resourceId"
+        },
+        "format": {
+          "anyOf": [
+            {
+              "const": "elf-template/v1"
+            },
+            {
+              "type": "string",
+              "pattern": "^(x-|urn:).+"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "stopCondition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "eos"
+          ],
+          "properties": {
+            "eos": {
+              "const": true
+            }
+          },
+          "additionalProperties": true
+        },
+        {
+          "type": "object",
+          "required": [
+            "sequence"
+          ],
+          "properties": {
+            "sequence": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "fulfillments": {
+      "type": "object",
+      "properties": {
+        "generate-text": {
+          "$ref": "#/$defs/fulfillmentArray"
+        },
+        "embed-text": {
+          "$ref": "#/$defs/fulfillmentArray"
+        },
+        "retrieve-segments": {
+          "$ref": "#/$defs/fulfillmentArray"
+        },
+        "read-resource": {
+          "$ref": "#/$defs/fulfillmentArray"
+        }
+      },
+      "additionalProperties": true
+    },
+    "fulfillmentArray": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/fulfillment"
+      }
+    },
+    "fulfillment": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/embeddedModelFulfillment"
+        },
+        {
+          "$ref": "#/$defs/embeddedIndexFulfillment"
+        },
+        {
+          "$ref": "#/$defs/hostCapabilityFulfillment"
+        },
+        {
+          "$ref": "#/$defs/networkResourceFulfillment"
+        },
+        {
+          "$ref": "#/$defs/namespacedFulfillment"
+        }
+      ]
+    },
+    "embeddedModelFulfillment": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "resource",
+        "interface",
+        "format"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "embedded-model"
+        },
+        "resource": {
+          "$ref": "#/$defs/resourceId"
+        },
+        "interface": {
+          "type": "string",
+          "minLength": 1
+        },
+        "format": {
+          "type": "string",
+          "minLength": 1
+        },
+        "context_window": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "selection_policy": {
+          "$ref": "#/$defs/selectionPolicy"
+        }
+      },
+      "additionalProperties": true
+    },
+    "embeddedIndexFulfillment": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "segments"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "embedded-index"
+        },
+        "segments": {
+          "$ref": "#/$defs/resourceId"
+        },
+        "embeddings": {
+          "$ref": "#/$defs/resourceId"
+        },
+        "index": {
+          "$ref": "#/$defs/resourceId"
+        },
+        "metric": {
+          "type": "string",
+          "minLength": 1
+        },
+        "selection_policy": {
+          "$ref": "#/$defs/selectionPolicy"
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "embeddings"
+          ]
+        },
+        {
+          "required": [
+            "index"
+          ]
+        }
+      ],
+      "additionalProperties": true
+    },
+    "hostCapabilityFulfillment": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "selector"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "host-capability"
+        },
+        "selector": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minimum_context_window": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "selection_policy": {
+          "$ref": "#/$defs/selectionPolicy"
+        }
+      },
+      "additionalProperties": true
+    },
+    "networkResourceFulfillment": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "network-resource"
+        },
+        "resource": {
+          "$ref": "#/$defs/resourceId"
+        },
+        "selection_policy": {
+          "$ref": "#/$defs/selectionPolicy"
+        }
+      },
+      "additionalProperties": true
+    },
+    "namespacedFulfillment": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "pattern": "^(x-|urn:).+"
+        }
+      },
+      "additionalProperties": true
+    },
+    "binding": {
+      "type": "object",
+      "required": [
+        "name",
+        "version",
+        "entry"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/bindingName"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/requirementToken"
+          },
+          "uniqueItems": true
+        },
+        "entry": {
+          "$ref": "#/$defs/bindingEntry"
+        }
+      },
+      "additionalProperties": true
+    },
+    "bindingEntry": {
+      "type": "object",
+      "properties": {
+        "ui": {
+          "$ref": "#/$defs/resourceId"
+        },
+        "runtime": {
+          "$ref": "#/$defs/resourceId"
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "ui"
+          ]
+        },
+        {
+          "required": [
+            "runtime"
+          ]
+        }
+      ],
+      "additionalProperties": true
+    },
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "network": {
+          "$ref": "#/$defs/networkPermission"
+        },
+        "filesystem": {
+          "$ref": "#/$defs/rwPermission"
+        },
+        "clipboard": {
+          "$ref": "#/$defs/rwPermission"
+        },
+        "devices": {
+          "$ref": "#/$defs/devicePermission"
+        },
+        "automation": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    "networkPermission": {
+      "type": "object",
+      "required": [
+        "mode"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "none",
+            "allow-listed"
+          ]
+        },
+        "origins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/httpsUri"
+          },
+          "uniqueItems": true,
+          "minItems": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "allow-listed"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "origins"
+            ]
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+    "rwPermission": {
+      "type": "object",
+      "properties": {
+        "read": {
+          "type": "boolean"
+        },
+        "write": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    "devicePermission": {
+      "type": "object",
+      "properties": {
+        "microphone": {
+          "type": "boolean"
+        },
+        "camera": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    "extensionDecl": {
+      "type": "object",
+      "required": [
+        "name",
+        "version",
+        "critical"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^x-[A-Za-z0-9._:-]+$"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "critical": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    },
+    "licenseEntry": {
+      "type": "object",
+      "required": [
+        "spdx"
+      ],
+      "properties": {
+        "scope": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "spdx": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text_resource": {
+          "$ref": "#/$defs/resourceId"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "attribution": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "builder": {
+          "type": "string"
+        },
+        "built_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_documents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sourceDocument"
+          }
+        },
+        "reproducible_seed": {
+          "type": [
+            "integer",
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "sourceDocument": {
+      "type": "object",
+      "required": [
+        "resource"
+      ],
+      "properties": {
+        "resource": {
+          "$ref": "#/$defs/resourceId"
+        },
+        "origin_url": {
+          "$ref": "#/$defs/httpsUri"
+        },
+        "retrieved_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": true
+    },
+    "signatureEntry": {
+      "type": "object",
+      "required": [
+        "algorithm",
+        "artifact_digest",
+        "public_key",
+        "signature"
+      ],
+      "properties": {
+        "algorithm": {
+          "anyOf": [
+            {
+              "const": "ed25519"
+            },
+            {
+              "type": "string",
+              "pattern": "^(x-|urn:).+"
+            }
+          ]
+        },
+        "artifact_digest": {
+          "$ref": "#/$defs/artifactDigest"
+        },
+        "public_key": {
+          "type": "string",
+          "minLength": 1,
+          "contentEncoding": "base64"
+        },
+        "signature": {
+          "type": "string",
+          "minLength": 1,
+          "contentEncoding": "base64"
+        },
+        "identity_hint": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}
