@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ELF — Embedded Language Format</title>
+<style>
+:root {
+  --bg:          #0d0e0f;
+  --bg-soft:     #111315;
+  --bg-card:     #161819;
+  --bg-card2:    #1c1f21;
+  --border:      #252829;
+  --border-soft: #1a1d1f;
+  --ink:         #e8e6df;
+  --ink-soft:    #9a9890;
+  --ink-faint:   #5a5855;
+  --accent:      #ff6b3d;
+  --accent2:     #ff8c66;
+  --teal:        #5fcfb8;
+  --teal-dim:    #3a8a78;
+  --warn:        #f0c674;
+  --paid:        #5fcfb8;  /* paid tier accent — teal, no purple per spec */
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'IBM Plex Mono','JetBrains Mono','Cascadia Code','Consolas',monospace;
+  font-size:14px;
+  line-height:1.6;
+  min-height:100vh;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 80% 0%, #ff6b3d0a 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 10% 80%, #5fcfb808 0%, transparent 50%);
+}
+
+/* scan lines */
+body::before{
+  content:'';position:fixed;inset:0;
+  background:repeating-linear-gradient(0deg,transparent 0,transparent 3px,rgba(255,255,255,0.008) 3px,rgba(255,255,255,0.008) 4px);
+  pointer-events:none;z-index:0;
+}
+
+/* ── NAV ─────────────────────────────────────────── */
+nav{
+  position:fixed;top:0;left:0;right:0;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 40px;
+  height:56px;
+  background:rgba(10,11,12,0.88);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  z-index:100;
+}
+.nav-logo{
+  display:flex;align-items:baseline;gap:10px;
+  font-size:13px;
+  cursor:default;
+  user-select:none;
+}
+.nav-logo-mark{
+  font-size:15px;font-weight:700;
+  color:var(--accent);
+  letter-spacing:-.01em;
+}
+.nav-logo-text{
+  color:var(--ink-faint);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.18em;
+}
+.nav-tabs{
+  display:flex;gap:4px;
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:3px;
+}
+.tab-btn{
+  background:none;border:none;
+  color:var(--ink-faint);
+  font-family:inherit;font-size:11px;
+  font-weight:700;text-transform:uppercase;letter-spacing:.14em;
+  padding:6px 18px;border-radius:4px;
+  cursor:pointer;
+  transition:all .2s ease;
+}
+.tab-btn.active-free{background:var(--accent);color:#000;}
+.tab-btn.active-paid{background:var(--paid);color:#000;}
+.tab-btn:not([class*=active]):hover{color:var(--ink);}
+
+/* ── HERO ─────────────────────────────────────────── */
+.hero{
+  padding:140px 40px 80px;
+  max-width:900px;
+  margin:0 auto;
+  position:relative;z-index:1;
+}
+.hero-eyebrow{
+  font-size:11px;color:var(--teal);
+  text-transform:uppercase;letter-spacing:.2em;
+  margin-bottom:20px;
+  display:flex;align-items:center;gap:10px;
+}
+.hero-eyebrow::before{content:'';display:block;width:24px;height:1px;background:var(--teal);}
+h1{
+  font-family:'IBM Plex Serif','Georgia','Times New Roman',serif;
+  font-size:clamp(32px,5vw,60px);
+  font-weight:600;
+  line-height:1.1;
+  letter-spacing:-.02em;
+  margin-bottom:24px;
+  color:var(--ink);
+}
+h1 em{color:var(--accent);font-style:italic;font-weight:400;}
+.hero-sub{
+  font-size:15px;color:var(--ink-soft);
+  max-width:560px;
+  margin-bottom:40px;
+  line-height:1.65;
+}
+.hero-ctas{
+  display:flex;gap:12px;flex-wrap:wrap;
+  margin-bottom:36px;
+}
+.btn-primary{
+  background:var(--accent);color:#000;
+  border:none;padding:12px 24px;border-radius:4px;
+  font-family:inherit;font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.12em;
+  cursor:pointer;
+  transition:all .2s ease;
+  text-decoration:none;display:inline-block;
+}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px);}
+.btn-ghost{
+  background:none;
+  border:1px solid var(--border);
+  color:var(--ink-soft);
+  padding:12px 24px;border-radius:4px;
+  font-family:inherit;font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.12em;
+  cursor:pointer;
+  transition:all .2s ease;
+  text-decoration:none;display:inline-block;
+}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.hero-terminal{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:16px 20px;
+  font-size:13px;
+  color:var(--ink);
+  max-width:480px;
+  position:relative;
+  overflow:hidden;
+}
+.hero-terminal::before{
+  content:'● ● ●';
+  font-size:9px;
+  color:var(--ink-faint);
+  display:block;
+  margin-bottom:10px;
+  letter-spacing:4px;
+}
+.t-comment{color:var(--ink-faint);}
+.t-cmd{color:var(--teal);}
+.t-arg{color:var(--accent);}
+.t-out{color:var(--ink-soft);}
+.t-ok{color:var(--teal);}
+.copy-btn{
+  position:absolute;top:12px;right:12px;
+  background:var(--bg-card2);border:1px solid var(--border);
+  color:var(--ink-faint);font-family:inherit;font-size:10px;
+  padding:3px 8px;border-radius:3px;cursor:pointer;
+  transition:all .15s ease;
+  text-transform:uppercase;letter-spacing:.08em;
+}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent);}
+.copy-btn.copied{color:var(--teal);border-color:var(--teal);}
+
+/* ── TAB CONTENT ──────────────────────────────────── */
+.tab-content{display:none;position:relative;z-index:1;}
+.tab-content.active{display:block;animation:fadein .3s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── SECTION ──────────────────────────────────────── */
+section{max-width:900px;margin:0 auto;padding:64px 40px;}
+section+section{padding-top:0;}
+
+.section-label{
+  font-size:10px;color:var(--ink-faint);
+  text-transform:uppercase;letter-spacing:.2em;
+  margin-bottom:20px;display:flex;align-items:center;gap:10px;
+}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+h2{
+  font-family:'IBM Plex Serif','Georgia',serif;
+  font-size:28px;font-weight:600;
+  letter-spacing:-.01em;margin-bottom:12px;
+}
+h2 .h2-acc{color:var(--accent);}
+
+/* ── FEATURE CARDS ────────────────────────────────── */
+.cards{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:1px;
+  background:var(--border);
+  border:1px solid var(--border);
+  border-radius:6px;
+  overflow:hidden;
+  margin-top:32px;
+}
+.card{
+  background:var(--bg-card);
+  padding:28px 24px;
+  transition:background .2s ease;
+}
+.card:hover{background:var(--bg-card2);}
+.card-num{
+  font-size:10px;color:var(--accent);
+  font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;margin-bottom:12px;
+}
+.card-title{
+  font-size:15px;font-weight:600;
+  margin-bottom:8px;color:var(--ink);
+}
+.card-desc{font-size:13px;color:var(--ink-soft);line-height:1.6;}
+
+/* ── HOW IT WORKS ─────────────────────────────────── */
+.steps{
+  display:flex;align-items:flex-start;gap:0;
+  margin-top:32px;
+  position:relative;
+}
+.step{flex:1;padding:24px 20px;position:relative;}
+.step::after{
+  content:'→';
+  position:absolute;right:-12px;top:28px;
+  color:var(--ink-faint);font-size:18px;
+}
+.step:last-child::after{display:none;}
+.step-num{font-size:10px;color:var(--teal);font-weight:700;letter-spacing:.15em;margin-bottom:8px;}
+.step-title{font-size:14px;font-weight:600;margin-bottom:6px;}
+.step-desc{font-size:12px;color:var(--ink-soft);}
+@media(max-width:680px){
+  .steps{flex-direction:column;gap:0;}
+  .step::after{content:'↓';right:auto;left:24px;top:auto;bottom:-14px;}
+  .step{border-left:2px solid var(--border);padding-left:24px;}
+  .step:last-child{border-left-color:transparent;}
+}
+
+/* ── CODE BLOCK ───────────────────────────────────── */
+.schema-block{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:6px;padding:20px 22px;
+  font-size:12px;line-height:1.65;
+  overflow-x:auto;margin-top:24px;
+  position:relative;
+}
+.schema-block::before{
+  content:attr(data-lang);
+  position:absolute;top:8px;right:12px;
+  font-size:9px;color:var(--ink-faint);
+  text-transform:uppercase;letter-spacing:.1em;
+}
+.sk{color:var(--teal);}      /* key */
+.sv{color:var(--warn);}      /* value string */
+.sc{color:var(--ink-faint);}  /* comment */
+.sa{color:var(--accent);}    /* accent value */
+
+/* ── DOWNLOAD ROW ─────────────────────────────────── */
+.dl-row{
+  display:flex;flex-wrap:wrap;gap:10px;
+  margin-top:28px;
+}
+.dl-btn{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg-card);border:1px solid var(--border);
+  color:var(--ink-soft);padding:10px 16px;border-radius:4px;
+  font-family:inherit;font-size:12px;cursor:pointer;
+  text-decoration:none;
+  transition:all .2s ease;
+}
+.dl-btn:hover{border-color:var(--accent);color:var(--ink);}
+.dl-icon{color:var(--accent);font-size:14px;}
+
+/* ── PAID TAB ─────────────────────────────────────── */
+.paid-hero{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:48px 40px;
+  margin-top:32px;
+  display:grid;grid-template-columns:1fr 1fr;gap:48px;
+  position:relative;overflow:hidden;
+}
+.paid-hero::before{
+  content:'';position:absolute;top:0;right:0;bottom:0;left:50%;
+  background:transparent;
+  border-left:1px solid var(--border-soft);
+}
+@media(max-width:720px){
+  .paid-hero{grid-template-columns:1fr;}
+  .paid-hero::before{display:none;}
+}
+.paid-label{
+  font-size:10px;color:var(--paid);
+  text-transform:uppercase;letter-spacing:.2em;
+  margin-bottom:16px;
+}
+.paid-title{
+  font-family:'IBM Plex Serif','Georgia',serif;
+  font-size:22px;font-weight:600;
+  margin-bottom:16px;line-height:1.25;
+}
+.paid-bullets{list-style:none;padding:0;}
+.paid-bullets li{
+  font-size:13px;color:var(--ink-soft);
+  padding:8px 0;
+  border-bottom:1px solid var(--border-soft);
+  display:flex;align-items:flex-start;gap:10px;
+}
+.paid-bullets li::before{content:'·';color:var(--paid);font-size:18px;line-height:1;}
+.paid-bullets li:last-child{border-bottom:none;}
+
+/* pipeline diagram */
+.pipeline{font-size:12px;color:var(--ink-soft);}
+.pipeline-title{font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.15em;margin-bottom:16px;}
+.pipe-row{
+  display:flex;align-items:center;gap:0;
+  flex-wrap:wrap;
+  position:relative;
+}
+.pipe-node{
+  background:var(--bg-card2);border:1px solid var(--border);
+  padding:8px 12px;border-radius:4px;
+  font-size:11px;color:var(--ink);
+  white-space:nowrap;
+}
+.pipe-arr{color:var(--ink-faint);padding:0 6px;font-size:12px;}
+.pipe-node.discriminator{border-color:var(--paid);color:var(--paid);}
+.pipe-node.output{border-color:var(--teal);color:var(--teal);}
+.coming-soon-badge{
+  display:inline-block;
+  background:rgba(95,207,184,0.12);
+  border:1px solid var(--paid);
+  color:var(--paid);
+  font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.15em;
+  padding:3px 10px;border-radius:3px;
+  margin-bottom:16px;
+}
+
+/* waitlist form */
+.waitlist{
+  margin-top:48px;
+  padding:32px;
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:6px;
+  max-width:480px;
+}
+.waitlist-label{
+  font-size:10px;color:var(--ink-faint);
+  text-transform:uppercase;letter-spacing:.18em;
+  margin-bottom:8px;
+}
+.waitlist h3{
+  font-family:'IBM Plex Serif','Georgia',serif;
+  font-size:18px;margin-bottom:16px;
+}
+.waitlist-row{display:flex;gap:8px;}
+.waitlist input{
+  flex:1;
+  background:var(--bg);border:1px solid var(--border);
+  color:var(--ink);padding:10px 14px;border-radius:4px;
+  font-family:inherit;font-size:13px;outline:none;
+}
+.waitlist input:focus{border-color:var(--paid);}
+.btn-paid{
+  background:var(--paid);color:#000;
+  border:none;padding:10px 18px;border-radius:4px;
+  font-family:inherit;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.1em;
+  cursor:pointer;transition:all .2s ease;white-space:nowrap;
+}
+.btn-paid:hover{filter:brightness(1.1);}
+.waitlist-note{font-size:11px;color:var(--ink-faint);margin-top:8px;}
+
+/* ── FOOTER ───────────────────────────────────────── */
+footer{
+  border-top:1px solid var(--border);
+  padding:28px 40px;
+  display:flex;flex-wrap:wrap;gap:16px;
+  align-items:center;justify-content:space-between;
+  font-size:11px;color:var(--ink-faint);
+  position:relative;z-index:1;
+}
+footer a{color:var(--teal);text-decoration:none;}
+footer a:hover{text-decoration:underline;}
+.footer-logo{color:var(--accent);font-weight:700;}
+
+/* scrollbar */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- ════ NAV ════ -->
+<nav>
+  <div class="nav-logo">
+    <span class="nav-logo-mark">// elf</span>
+    <span class="nav-logo-text">Embedded Language Format</span>
+  </div>
+  <div class="nav-tabs">
+    <button class="tab-btn active-free" data-tab="free">Free</button>
+    <button class="tab-btn" data-tab="paid">Paid</button>
+  </div>
+</nav>
+
+<!-- ════ HERO (always visible) ════ -->
+<div class="hero">
+  <div class="hero-eyebrow">v0.1 — open spec</div>
+  <h1>Knowledge, embedded.<br><em>Runs anywhere.</em><br>No internet required.</h1>
+  <p class="hero-sub">ELF is a format for bundling a knowledge base, a chat assistant, and optional local-model inference into a single portable HTML file — the document <em>and</em> the AI that knows it, together.</p>
+  <div class="hero-ctas">
+    <a href="#free-section" class="btn-primary" onclick="switchTab('free')">Get the generator →</a>
+    <a href="demo/quarter_car.elf.html" target="_blank" rel="noopener" class="btn-ghost">View demo ↗</a>
+  </div>
+  <div class="hero-terminal">
+    <button class="copy-btn" id="copyBtn" onclick="copyCmd()">Copy</button>
+    <div><span class="t-comment"># write a KB JSON, generate the wiki</span></div>
+    <div><span class="t-cmd">python</span> <span class="t-arg">elf_gen.py</span> kb/my_subject.json</div>
+    <div><span class="t-ok">✓</span>  <span class="t-out">output/my_subject.elf.html  (42,891 bytes)</span></div>
+  </div>
+</div>
+
+<!-- ════ FREE TAB ════ -->
+<div class="tab-content active" id="tab-free">
+  <section id="free-section">
+    <div class="section-label">What you get</div>
+    <h2>Three files. <span class="h2-acc">Infinite wikis.</span></h2>
+    <div class="cards">
+      <div class="card">
+        <div class="card-num">[01]</div>
+        <div class="card-title">ELF generator</div>
+        <div class="card-desc">Python script with zero dependencies beyond stdlib. Point it at a KB JSON — get back a fully offline HTML wiki with embedded chat assistant.</div>
+      </div>
+      <div class="card">
+        <div class="card-num">[02]</div>
+        <div class="card-title">KB schema</div>
+        <div class="card-desc">An annotated JSON schema any LLM can fill in from a one-sentence topic prompt. Articles, equations, code blocks, tables — all supported.</div>
+      </div>
+      <div class="card">
+        <div class="card-num">[03]</div>
+        <div class="card-title">Offline assistant</div>
+        <div class="card-desc">Every generated wiki ships with a keyword-retrieval chatbot. Paste a Claude API key for smarter answers — or leave it offline forever.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-label">How it works</div>
+    <h2>Three steps. <span class="h2-acc">No server.</span></h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-title">Write a KB JSON</div>
+        <div class="step-desc">Use the schema as a guide — or prompt any LLM: "fill in _schema.json for Introduction to Thermodynamics."</div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-title">Run elf_gen.py</div>
+        <div class="step-desc">One command. Reads your JSON, renders articles, inlines CSS/JS, writes a single <code>.elf.html</code>.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-title">Share the file</div>
+        <div class="step-desc">Email it, host it as a static site, or put it on a USB drive. No server. No login. No expiry.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-label">The format</div>
+    <h2>Human-readable. <span class="h2-acc">AI-writable.</span></h2>
+    <p style="color:var(--ink-soft);max-width:560px;margin-bottom:0;">The KB schema is designed to be filled in by a language model from a short prompt. Every field has an inline comment explaining what goes there.</p>
+    <div class="schema-block" data-lang="json (excerpt)">
+<span class="sc">// _schema.json — the format contract</span>
+{
+  <span class="sk">"manifest"</span>: {
+    <span class="sk">"title"</span>:    <span class="sv">"REQUIRED. e.g. 'Intro to Thermodynamics'"</span>,
+    <span class="sk">"file_id"</span>:  <span class="sv">"REQUIRED. slug → becomes the filename"</span>,
+    <span class="sk">"accent"</span>:   <span class="sv">"OPTIONAL. hex color. default #ff6b3d"</span>,
+    <span class="sk">"license"</span>:  { <span class="sk">"name"</span>: <span class="sa">"CC BY-NC-SA 4.0"</span> }
+  },
+  <span class="sk">"articles"</span>: [ <span class="sc">/* array of wiki pages */</span> ],
+  <span class="sk">"chunks"</span>:   [ <span class="sc">/* Q&A pairs for the offline assistant */</span> ]
+}</div>
+  </section>
+
+  <section>
+    <div class="section-label">Get started</div>
+    <h2>Download. <span class="h2-acc">Run. Ship.</span></h2>
+    <div class="dl-row">
+      <a href="elf_gen.py" download class="dl-btn"><span class="dl-icon">↓</span> elf_gen.py</a>
+      <a href="kb/_schema.json" download class="dl-btn"><span class="dl-icon">↓</span> _schema.json</a>
+      <a href="kb/quarter_car.json" download class="dl-btn"><span class="dl-icon">↓</span> quarter_car.json <span style="color:var(--ink-faint);font-size:11px">(example)</span></a>
+    </div>
+    <div style="margin-top:20px;">
+      <div class="hero-terminal" style="max-width:500px;">
+        <button class="copy-btn" id="copyBtn2" onclick="copyCmd2()">Copy</button>
+        <div><span class="t-comment"># generate the demo wiki</span></div>
+        <div><span class="t-cmd">python</span> <span class="t-arg">elf_gen.py</span> kb/quarter_car.json</div>
+        <div style="margin-top:6px;"><span class="t-comment"># generate from your own subject</span></div>
+        <div><span class="t-cmd">python</span> <span class="t-arg">elf_gen.py</span> kb/thermodynamics.json <span class="t-arg">--out</span> site/thermo.elf.html</div>
+      </div>
+    </div>
+    <p style="color:var(--ink-faint);font-size:12px;margin-top:16px;">
+      Licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a> — share alike, non-commercial, with attribution.
+    </p>
+  </section>
+</div>
+
+<!-- ════ PAID TAB ════ -->
+<div class="tab-content" id="tab-paid">
+  <section>
+    <div class="section-label">Paid tier</div>
+    <h2>Train a model that <span class="h2-acc">generates ELF.</span></h2>
+    <p style="color:var(--ink-soft);max-width:560px;">
+      The paid pipeline generates thousands of ELF documents across any domain, scores each one with an LLM discriminator, and exports clean training data — aimed at fine-tuning a model small enough to run entirely in-browser.
+    </p>
+
+    <div class="paid-hero">
+      <!-- left -->
+      <div>
+        <div class="paid-label">Synthetic data pipeline</div>
+        <div class="paid-title">From topic prompt to fine-tuning dataset</div>
+        <ul class="paid-bullets">
+          <li>Generate ELF documents at scale from a list of topics or a domain seed</li>
+          <li>Discriminator scores each document for factual accuracy against live sources</li>
+          <li>Export JSONL training data: prompt → ELF KB JSON, ready for fine-tuning</li>
+          <li>Target: a 1–3B model that generates ELF wikis locally, no internet, no API key</li>
+        </ul>
+      </div>
+
+      <!-- right: pipeline diagram -->
+      <div>
+        <div class="coming-soon-badge">Coming soon</div>
+        <div class="pipeline">
+          <div class="pipeline-title">Pipeline</div>
+          <div class="pipe-row" style="margin-bottom:10px;">
+            <span class="pipe-node">Topic prompt</span>
+            <span class="pipe-arr">→</span>
+            <span class="pipe-node">Generator LLM</span>
+            <span class="pipe-arr">→</span>
+            <span class="pipe-node">ELF doc</span>
+          </div>
+          <div class="pipe-row" style="margin-bottom:10px;">
+            <span class="pipe-node">ELF doc</span>
+            <span class="pipe-arr">→</span>
+            <span class="pipe-node discriminator">Discriminator + web</span>
+            <span class="pipe-arr">→</span>
+            <span class="pipe-node">Score</span>
+          </div>
+          <div class="pipe-row">
+            <span class="pipe-node">Score ≥ 0.8</span>
+            <span class="pipe-arr">→</span>
+            <span class="pipe-node output">JSONL training data</span>
+          </div>
+          <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border-soft);font-size:11px;color:var(--ink-faint);">
+            Target runtime: <span style="color:var(--ink);">wllama / WebLLM</span><br>
+            Target size: <span style="color:var(--ink);">1–3B parameters</span><br>
+            No internet at inference time.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- waitlist -->
+    <div class="waitlist">
+      <div class="waitlist-label">Early access</div>
+      <h3>Get notified when the pipeline ships.</h3>
+      <div class="waitlist-row">
+        <input type="email" id="emailInput" placeholder="you@domain.com">
+        <button class="btn-paid" onclick="joinWaitlist()">Join waitlist</button>
+      </div>
+      <p class="waitlist-note">No spam. One email when it's ready.</p>
+    </div>
+  </section>
+</div>
+
+<!-- ════ FOOTER ════ -->
+<footer>
+  <span><span class="footer-logo">// elf</span> — Embedded Language Format</span>
+  <span>
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" rel="noopener">CC BY-NC-SA 4.0</a>
+    — share alike, non-commercial, with attribution
+  </span>
+  <a href="demo/quarter_car.elf.html" target="_blank" rel="noopener">View demo wiki ↗</a>
+</footer>
+
+<script>
+// ── TAB SWITCHING ────────────────────────────────────────────────────────────
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.remove('active-free','active-paid');
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  const btn = document.querySelector(`[data-tab="${tab}"]`);
+  btn.classList.add(tab === 'free' ? 'active-free' : 'active-paid');
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+// ── COPY COMMAND ─────────────────────────────────────────────────────────────
+function copyCmd(){
+  navigator.clipboard.writeText('python elf_gen.py kb/quarter_car.json').then(()=>{
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function copyCmd2(){
+  navigator.clipboard.writeText('python elf_gen.py kb/quarter_car.json').then(()=>{
+    const btn = document.getElementById('copyBtn2');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ── WAITLIST ─────────────────────────────────────────────────────────────────
+function joinWaitlist(){
+  const email = document.getElementById('emailInput').value.trim();
+  if(!email || !email.includes('@')){ alert('enter a valid email'); return; }
+  console.log('waitlist signup:', email);
+  // TODO: wire to your email backend (Resend, Buttondown, etc.)
+  document.getElementById('emailInput').value = '';
+  alert('You\'re on the list. We\'ll be in touch.');
+}
+</script>
+</body>
+</html>
