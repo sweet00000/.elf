@@ -1,0 +1,12 @@
+{
+  "registry": "template-formats",
+  "policy": "GOVERNANCE.md",
+  "entries": [
+    {
+      "token": "elf-template/v1",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    }
+  ]
+}

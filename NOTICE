@@ -1,0 +1,21 @@
+ELF Format Specification and Reference Implementation
+Copyright (c) 2026 sweet00000
+
+This product includes material developed by the ELF Editors
+(https://github.com/sweet00000/.elf).
+
+Specification prose is licensed under CC BY 4.0 (see LICENSE-DOCS.md).
+Schemas, test material, and reference code are licensed under the
+Apache License, Version 2.0 (see LICENSE).
+
+THE SPECIFICATION AND ALL MATERIAL IN THIS REPOSITORY ARE PROVIDED
+"AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY ARISING FROM THE USE OF THE SPECIFICATION OR IMPLEMENTATIONS
+THEREOF.
+
+"ELF" as used in this repository refers to the Embedded Language Format
+and is unrelated to the Executable and Linkable Format used for compiled
+binaries on Unix-like systems.

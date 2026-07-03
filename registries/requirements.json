@@ -1,0 +1,60 @@
+{
+  "registry": "requirements",
+  "policy": "GOVERNANCE.md",
+  "entries": [
+    {
+      "token": "compute.local",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "compute.simd",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "compute.shared-memory",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "acceleration.gpu",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "storage.persistent",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "binding.browser-dom",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "binding.browser-esm",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "binding.browser-worker",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "binding.browser-module-worker",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    }
+  ]
+}

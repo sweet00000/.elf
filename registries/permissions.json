@@ -1,0 +1,42 @@
+{
+  "registry": "permissions",
+  "policy": "GOVERNANCE.md",
+  "entries": [
+    {
+      "token": "network",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "filesystem",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "clipboard",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "devices.microphone",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "devices.camera",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "automation",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    }
+  ]
+}

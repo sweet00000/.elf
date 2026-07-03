@@ -1,0 +1,30 @@
+{
+  "registry": "operations",
+  "policy": "GOVERNANCE.md",
+  "entries": [
+    {
+      "token": "generate-text",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "embed-text",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "retrieve-segments",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "read-resource",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    }
+  ]
+}

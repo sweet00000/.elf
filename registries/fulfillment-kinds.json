@@ -1,0 +1,30 @@
+{
+  "registry": "fulfillment-kinds",
+  "policy": "GOVERNANCE.md",
+  "entries": [
+    {
+      "token": "embedded-model",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "embedded-index",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "host-capability",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "network-resource",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    }
+  ]
+}

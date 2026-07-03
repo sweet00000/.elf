@@ -1,0 +1,18 @@
+{
+  "registry": "bindings",
+  "policy": "GOVERNANCE.md",
+  "entries": [
+    {
+      "token": "browser-js",
+      "since": "0.2",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    },
+    {
+      "token": "native-launcher",
+      "since": "0.3-draft",
+      "definition": "See normative definition in ELF-SPEC.",
+      "reference": "ELF-SPEC-v0.2.md"
+    }
+  ]
+}

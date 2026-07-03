@@ -1,0 +1,72 @@
+{
+  "$comment": "Drop-in replacement for the 'licenses' definition in ELF-MANIFEST-SCHEMA (v0.3 draft). Merge into the schema's definitions and reference from the top-level 'licenses' array items. Licensed Apache-2.0.",
+  "licenseEntry": {
+    "type": "object",
+    "required": ["scope", "spdx", "redistributable"],
+    "properties": {
+      "scope": { "enum": ["resource", "artifact"] },
+      "target": {
+        "type": "string",
+        "pattern": "^res:",
+        "$comment": "REQUIRED when scope == resource; enforce with allOf/if-then below."
+      },
+      "spdx": {
+        "type": "string",
+        "minLength": 1,
+        "$comment": "Valid SPDX id or expression, or LicenseRef-<tag>."
+      },
+      "text_resource": {
+        "type": "string",
+        "pattern": "^res:",
+        "$comment": "REQUIRED when spdx starts with LicenseRef-."
+      },
+      "redistributable": { "type": "boolean" },
+      "attribution": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "creator": { "type": "string" },
+          "source_url": { "type": "string", "format": "uri" },
+          "changes": { "type": "string" }
+        },
+        "anyOf": [
+          { "required": ["creator"] },
+          { "required": ["source_url"] }
+        ],
+        "additionalProperties": false
+      }
+    },
+    "allOf": [
+      {
+        "if": { "properties": { "scope": { "const": "resource" } } },
+        "then": { "required": ["target"] }
+      },
+      {
+        "if": { "properties": { "spdx": { "pattern": "^LicenseRef-" } } },
+        "then": { "required": ["text_resource"] }
+      }
+    ],
+    "additionalProperties": false
+  },
+  "provenanceAdditions": {
+    "$comment": "Merge into the existing provenance object properties.",
+    "model_documentation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["resource"],
+        "properties": {
+          "resource": { "type": "string", "pattern": "^res:" },
+          "card_url": { "type": "string", "format": "uri" },
+          "provider": { "type": "string" },
+          "training_data_summary_url": { "type": "string", "format": "uri" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "sbom_export": {
+      "type": "string",
+      "$comment": "Registered SBOM mapping name, e.g. 'spdx-2.3' or 'cyclonedx-1.6'."
+    }
+  }
+}
